@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ImageBlurDetection</string>
+    <string name="gallery_pick_image">Gallery image</string>
 </resources>
