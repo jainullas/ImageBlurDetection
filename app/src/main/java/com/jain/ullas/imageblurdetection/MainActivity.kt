@@ -4,13 +4,13 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.hardware.Camera
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
+import android.view.*
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
@@ -22,27 +22,103 @@ import org.opencv.imgproc.Imgproc
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.OpenCVLoader
+import java.io.FileOutputStream
+import java.io.IOException
+import android.view.SurfaceHolder
 
 
 
 
-
-
-class MainActivity : AppCompatActivity(), MainActivityView {
+class MainActivity : AppCompatActivity(), MainActivityView
+//        , SurfaceHolder.Callback
+{
 
     companion object {
         private const val PICK_IMAGE_REQUEST_CODE = 1001
     }
 
+    private var camera : Camera? = null
     private lateinit var presenter: MainPresenter
     private lateinit var matImage: Mat
-
+    private lateinit var surfaceHolder: SurfaceHolder
+    private lateinit var jpegCallback : Camera.PictureCallback
+    private lateinit var rawCallback : Camera.PictureCallback
+    private lateinit var shutterCallback: Camera.ShutterCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         presenter = MainPresenter(this)
+//        surfaceHolder = surfaceView.holder
+//        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
+//        surfaceHolder.addCallback(this)
+//
+//        jpegCallback = Camera.PictureCallback { data, camera ->
+//            var outStream : FileOutputStream? = null
+//            try {
+//                outStream = FileOutputStream(String.format("/sdcard/%d.jpg", System.currentTimeMillis()))
+//                outStream.write(data)
+//                outStream.close()
+//                Log.d("Log", "onPictureTaken - wrote bytes: " + data.size)
+//            }catch (e : Exception) {
+//                e.printStackTrace()
+//            }
+//            showToast("Picture Saved")
+//            refreshCamera()
+//        }
     }
+//
+//    @Throws(Exception::class)
+//    fun captureImage(v: View) {
+//        //take the picture
+//        camera?.takePicture(null, null, jpegCallback)
+//    }
+//
+//    @Throws(Exception::class)
+//    private fun refreshCamera() {
+//        if (surfaceHolder.surface == null) {
+//            // preview surface does not exist
+//            return
+//        }
+//        try {
+//            camera?.stopPreview()
+//            camera?.setPreviewDisplay(surfaceHolder)
+//            camera?.startPreview()
+//        }catch (e : Exception) {
+//            e.printStackTrace()
+//        }
+//
+//    }
+//
+//    override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
+//        refreshCamera()
+//    }
+//
+//    override fun surfaceDestroyed(holder: SurfaceHolder?) {
+//        camera?.stopPreview();
+//        camera?.release();
+//        camera = null;
+//    }
+//
+//    override fun surfaceCreated(holder: SurfaceHolder?) {
+//        try {
+//            camera = Camera.open();
+//        } catch (e : RuntimeException) {
+//            System.err.println(e);
+//            return;
+//        }
+//        val param :  Camera.Parameters? = camera?.parameters
+//        param?.setPreviewSize(352, 288);
+//        camera?.setParameters(param);
+//        try {
+//            camera?.setPreviewDisplay(surfaceHolder);
+//            camera?.startPreview();
+//        } catch (e : Exception) {
+//            e.printStackTrace()
+//            return;
+//        }
+//    }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_pick_gallery_image, menu)
