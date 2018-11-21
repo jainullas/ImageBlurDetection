@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity(), MainActivityView {
 
     companion object {
         private const val PICK_IMAGE_REQUEST_CODE = 1001
-        private const val BLUR_THRESHOLD = 1000
+        private const val BLUR_THRESHOLD = 500
         private const val BLURRED_IMAGE = "BLURRED IMAGE"
         private const val NOT_BLURRED_IMAGE = "NOT BLURRED IMAGE"
     }
