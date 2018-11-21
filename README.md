@@ -12,7 +12,7 @@ Integrating OpenCV to studio-project is quite a long procedure. Please refer thi
 #### APK Size
 APK size is the main concern when we want to integrate with OpenCV.
 
-![Apk size][apk_size_screenshot.png]
+![Apk size](apk_size_screenshot.png)
 * Debug APK size -  86 MB
 * Debug APK size with Progaurd - 84.4 MB
 * Debug APK size with Progaurd and R8 - 80 MB
