@@ -1,6 +1,6 @@
 # ImageBlur Detection
 
-To check whether an image is blurred or not in Android, selecting image via Camera/Gallery
+To check whether an image is blurred or not in Android, selecting image from Gallery.(_From camera coming soon..._)
 
 
 OpenCV library is used for Blur detection.
@@ -18,7 +18,7 @@ APK size is the main concern when we want to integrate with OpenCV.
 
 
 #### Workaround to minimise apk size
-
+[Credits](https://stackoverflow.com/a/45074929/5785930)
 * Splitting apks by including only those architectures that we need to support. Also include universal apk.
 ```groovy
  splits {
@@ -47,8 +47,6 @@ APK size is the main concern when we want to integrate with OpenCV.
  ```
 
  *Problem* with this approach is we have to upload all the apks separately for google play console, including univeral apk.
-
-[Credits](https://stackoverflow.com/a/45074929/5785930)
 
 #### Useful info
 According to [stats](https://stackoverflow.com/a/33230181/5785930), armv7 is the most commonly used android architectures.

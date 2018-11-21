@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/menu_gallery"
-        android:icon="@drawable/ic_go_pay_upload"
+        android:icon="@drawable/ic_select_from_gallery"
         android:orderInCategory="0"
         android:title="@string/gallery_pick_image"
         app:showAsAction="always"/>

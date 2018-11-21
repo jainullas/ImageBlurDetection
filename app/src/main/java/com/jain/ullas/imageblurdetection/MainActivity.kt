@@ -3,117 +3,55 @@ package com.jain.ullas.imageblurdetection
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.hardware.Camera
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import org.opencv.android.Utils
-import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
-import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.BaseLoaderCallback
+import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
-import android.view.SurfaceHolder
+import org.opencv.android.Utils
 import org.opencv.core.Core
+import org.opencv.core.Mat
 import org.opencv.core.MatOfDouble
+import org.opencv.imgproc.Imgproc
+import java.text.DecimalFormat
 
 
-class MainActivity : AppCompatActivity(), MainActivityView
-//        , SurfaceHolder.Callback
-{
+class MainActivity : AppCompatActivity(), MainActivityView {
 
     companion object {
         private const val PICK_IMAGE_REQUEST_CODE = 1001
+        private const val BLUR_THRESHOLD = 1000
+        private const val BLURRED_IMAGE = "BLURRED IMAGE"
+        private const val NOT_BLURRED_IMAGE = "NOT BLURRED IMAGE"
     }
 
-    private var camera : Camera? = null
+    private lateinit var sourceMatImage: Mat
     private lateinit var presenter: MainPresenter
-    private lateinit var matImage: Mat
-    private lateinit var surfaceHolder: SurfaceHolder
-    private lateinit var jpegCallback : Camera.PictureCallback
-    private lateinit var rawCallback : Camera.PictureCallback
-    private lateinit var shutterCallback: Camera.ShutterCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         presenter = MainPresenter(this)
-//        surfaceHolder = surfaceView.holder
-//        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
-//        surfaceHolder.addCallback(this)
-//
-//        jpegCallback = Camera.PictureCallback { data, camera ->
-//            var outStream : FileOutputStream? = null
-//            try {
-//                outStream = FileOutputStream(String.format("/sdcard/%d.jpg", System.currentTimeMillis()))
-//                outStream.write(data)
-//                outStream.close()
-//                Log.d("Log", "onPictureTaken - wrote bytes: " + data.size)
-//            }catch (e : Exception) {
-//                e.printStackTrace()
-//            }
-//            showToast("Picture Saved")
-//            refreshCamera()
-//        }
+        textCpuArchitecture.text = getString(R.string.cpu_architecture, System.getProperty("os.arch"))
+        selectImageFromGallery.setOnClickListener {
+            launchGalleryToPickPhoto()
+        }
     }
-//
-//    @Throws(Exception::class)
-//    fun captureImage(v: View) {
-//        //take the picture
-//        camera?.takePicture(null, null, jpegCallback)
-//    }
-//
-//    @Throws(Exception::class)
-//    private fun refreshCamera() {
-//        if (surfaceHolder.surface == null) {
-//            // preview surface does not exist
-//            return
-//        }
-//        try {
-//            camera?.stopPreview()
-//            camera?.setPreviewDisplay(surfaceHolder)
-//            camera?.startPreview()
-//        }catch (e : Exception) {
-//            e.printStackTrace()
-//        }
-//
-//    }
-//
-//    override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-//        refreshCamera()
-//    }
-//
-//    override fun surfaceDestroyed(holder: SurfaceHolder?) {
-//        camera?.stopPreview();
-//        camera?.release();
-//        camera = null;
-//    }
-//
-//    override fun surfaceCreated(holder: SurfaceHolder?) {
-//        try {
-//            camera = Camera.open();
-//        } catch (e : RuntimeException) {
-//            System.err.println(e);
-//            return;
-//        }
-//        val param :  Camera.Parameters? = camera?.parameters
-//        param?.setPreviewSize(352, 288);
-//        camera?.setParameters(param);
-//        try {
-//            camera?.setPreviewDisplay(surfaceHolder);
-//            camera?.startPreview();
-//        } catch (e : Exception) {
-//            e.printStackTrace()
-//            return;
-//        }
-//    }
-
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_pick_gallery_image, menu)
@@ -144,26 +82,40 @@ class MainActivity : AppCompatActivity(), MainActivityView
         try {
             val imageUri = galleryIntentData.data
             val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+            scannedImage.setImageBitmap(bitmap)
+            scannedImage.visibility = VISIBLE
             presenter.getDataFromImageBitmap(bitmap)
         } catch (e: Exception) {
             hideLoading()
-            Log.e(MainActivity::class.java.name, "Error",e)
+            Log.e(MainActivity::class.java.name, "Error", e)
         }
     }
 
     override fun onSuccessfulScan(bitmap: Bitmap?) {
+        clearExistingResult()
         try {
             bitmap?.let {
-                when(isImageBlurred(it)) {
-                    true -> showToast("BLURRED IMAGE")
-                    false -> showToast("NOT blurred IMAGE")
-                }
+                updateStatus(checkForImageSharpness(it))
             }
-        }catch (e : Exception){
-            Log.e(MainActivity::class.java.name, "Error",e)
+        } catch (e: Exception) {
+            Log.e(MainActivity::class.java.name, "Error", e)
         }
 
     }
+
+    private fun updateStatus(imageSharpness: Double) {
+        when (imageSharpness < BLUR_THRESHOLD) {
+            true -> {
+                status.text = "Threshold : " + BLUR_THRESHOLD + " " + ", Current :  $imageSharpness".plus("\n").plus(BLURRED_IMAGE)
+                status.setTextColor(Color.parseColor("#F70913"))
+            }
+            false -> {
+                status.text = "Threshold : " + BLUR_THRESHOLD + " " + ", Current :  $imageSharpness".plus("\n").plus(NOT_BLURRED_IMAGE)
+                status.setTextColor(Color.parseColor("#34F709"))
+            }
+        }
+    }
+
 
     override fun onScanFailureFromGallery() {
         showToast("onScanFailureFromGallery")
@@ -188,11 +140,15 @@ class MainActivity : AppCompatActivity(), MainActivityView
         startActivityForResult(Intent.createChooser(intent, getString(R.string.gallery_pick_image)), PICK_IMAGE_REQUEST_CODE)
     }
 
+    private fun clearExistingResult() {
+        status.text = ""
+    }
+
     private val mLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
             when (status) {
                 LoaderCallbackInterface.SUCCESS -> {
-                    matImage = Mat()
+                    sourceMatImage = Mat()
                 }
                 else -> {
                     super.onManagerConnected(status)
@@ -210,19 +166,20 @@ class MainActivity : AppCompatActivity(), MainActivityView
         }
     }
 
-    private fun isImageBlurred(image : Bitmap) : Boolean{
+    private fun checkForImageSharpness(image: Bitmap): Double {
         val destination = Mat()
         val matGray = Mat()
-        Utils.bitmapToMat(image, matImage)
-        Imgproc.cvtColor(matImage, matGray, Imgproc.COLOR_BGR2GRAY)
+        Utils.bitmapToMat(image, sourceMatImage)
+        Imgproc.cvtColor(sourceMatImage, matGray, Imgproc.COLOR_BGR2GRAY)
         Imgproc.Laplacian(matGray, destination, 3)
         val median = MatOfDouble()
         val std = MatOfDouble()
         Core.meanStdDev(destination, median, std)
-        val sharpness = Math.pow(std.get(0,0)[0], 2.0)
+        return DecimalFormat("0.00").format(Math.pow(std.get(0, 0)[0], 2.0)).toDouble()
+    }
 
-        showToast("Sharpness : $sharpness")
-
-        return sharpness < 1000
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
     }
 }
