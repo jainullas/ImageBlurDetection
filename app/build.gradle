@@ -14,8 +14,16 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
-            abiFilters "armeabi-v7a", "x86"
+            abiFilters "armeabi-v7a"
         }
+//        splits {
+//            abi {
+//                enable true
+//                reset()
+//                include "armeabi-v7a","x86"
+//                universalApk true
+//            }
+//        }
     }
     buildTypes {
         release {
@@ -32,6 +40,19 @@ android {
         exclude 'META-INF/rxjava.properties'
     }
 }
+
+//ext.versionCodes = ['armeabi-v7a': 4, 'x86': 5]
+//import com.android.build.OutputFile
+//android.applicationVariants.all { variant ->
+//    variant.outputs.each { output ->
+//        def abiFilter = output.getFilter(OutputFile.ABI)
+//        def abiMultiplier = 0
+//        if (abiFilter != null) {
+//            abiMultiplier = project.ext.versionCodes.get(abiFilter)
+//        }
+//        output.versionCodeOverride = abiMultiplier * 1000 + android.defaultConfig.versionCode
+//    }
+//}
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

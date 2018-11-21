@@ -220,38 +220,37 @@ class MainActivity : AppCompatActivity(), MainActivityView
 
     private fun opencvProcess(image : Bitmap) : Boolean{
         val l = CvType.CV_8UC1 //8-bit grey scale image
+
         Utils.bitmapToMat(image, matImage)
         val matImageGrey = Mat()
         Imgproc.cvtColor(matImage, matImageGrey, Imgproc.COLOR_BGR2GRAY)
 
-        val destImage: Bitmap
-        destImage = Bitmap.createBitmap(image)
+        val destImage = Bitmap.createBitmap(image)
         val dst2 = Mat()
         Utils.bitmapToMat(destImage, dst2)
+
         val laplacianImage = Mat()
+        val laplacianImage8bit = Mat()
         dst2.convertTo(laplacianImage, l)
         Imgproc.Laplacian(matImageGrey, laplacianImage, CvType.CV_8U)
-        val laplacianImage8bit = Mat()
         laplacianImage.convertTo(laplacianImage8bit, l)
 
         val bmp = Bitmap.createBitmap(laplacianImage8bit.cols(), laplacianImage8bit.rows(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(laplacianImage8bit, bmp)
         val pixels = IntArray(bmp.height * bmp.width)
-        bmp.getPixels(pixels, 0, bmp.width, 0, 0, bmp.width, bmp.height) // bmp为轮廓图
+        bmp.getPixels(pixels, 0, bmp.width, 0, 0, bmp.width, bmp.height)
 
         var maxLap = -16777216 // 16m
+        var soglia = -6118750
         for (pixel in pixels) {
             if (pixel > maxLap)
                 maxLap = pixel
         }
 
-        var soglia = -6118750
-        if (maxLap <= soglia) {
-            println("is blur image")
-        }
+
         soglia += 6118750
         maxLap += 6118750
-//        opencvEnd = true
+        showToast("Maxlap : $maxLap")
         return maxLap <= soglia
     }
 }
