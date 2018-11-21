@@ -3,10 +3,8 @@ package com.jain.ullas.imageblurdetection
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.hardware.Camera
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -16,17 +14,14 @@ import android.view.View.VISIBLE
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.Utils
-import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.OpenCVLoader
-import java.io.FileOutputStream
-import java.io.IOException
 import android.view.SurfaceHolder
-
-
+import org.opencv.core.Core
+import org.opencv.core.MatOfDouble
 
 
 class MainActivity : AppCompatActivity(), MainActivityView
@@ -159,7 +154,7 @@ class MainActivity : AppCompatActivity(), MainActivityView
     override fun onSuccessfulScan(bitmap: Bitmap?) {
         try {
             bitmap?.let {
-                when(opencvProcess(it)) {
+                when(isImageBlurred(it)) {
                     true -> showToast("BLURRED IMAGE")
                     false -> showToast("NOT blurred IMAGE")
                 }
@@ -197,7 +192,6 @@ class MainActivity : AppCompatActivity(), MainActivityView
         override fun onManagerConnected(status: Int) {
             when (status) {
                 LoaderCallbackInterface.SUCCESS -> {
-                    Log.i("OpenCV", "OpenCV loaded successfully")
                     matImage = Mat()
                 }
                 else -> {
@@ -210,47 +204,25 @@ class MainActivity : AppCompatActivity(), MainActivityView
     public override fun onResume() {
         super.onResume()
         if (!OpenCVLoader.initDebug()) {
-            Log.d("OpenCV", "Internal OpenCV library not found. Using OpenCV Manager for initialization")
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback)
         } else {
-            Log.d("OpenCV", "OpenCV library found inside package. Using it!")
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
         }
     }
 
-    private fun opencvProcess(image : Bitmap) : Boolean{
-        val l = CvType.CV_8UC1 //8-bit grey scale image
-
+    private fun isImageBlurred(image : Bitmap) : Boolean{
+        val destination = Mat()
+        val matGray = Mat()
         Utils.bitmapToMat(image, matImage)
-        val matImageGrey = Mat()
-        Imgproc.cvtColor(matImage, matImageGrey, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.cvtColor(matImage, matGray, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.Laplacian(matGray, destination, 3)
+        val median = MatOfDouble()
+        val std = MatOfDouble()
+        Core.meanStdDev(destination, median, std)
+        val sharpness = Math.pow(std.get(0,0)[0], 2.0)
 
-        val destImage = Bitmap.createBitmap(image)
-        val dst2 = Mat()
-        Utils.bitmapToMat(destImage, dst2)
+        showToast("Sharpness : $sharpness")
 
-        val laplacianImage = Mat()
-        val laplacianImage8bit = Mat()
-        dst2.convertTo(laplacianImage, l)
-        Imgproc.Laplacian(matImageGrey, laplacianImage, CvType.CV_8U)
-        laplacianImage.convertTo(laplacianImage8bit, l)
-
-        val bmp = Bitmap.createBitmap(laplacianImage8bit.cols(), laplacianImage8bit.rows(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(laplacianImage8bit, bmp)
-        val pixels = IntArray(bmp.height * bmp.width)
-        bmp.getPixels(pixels, 0, bmp.width, 0, 0, bmp.width, bmp.height)
-
-        var maxLap = -16777216 // 16m
-        var soglia = -6118750
-        for (pixel in pixels) {
-            if (pixel > maxLap)
-                maxLap = pixel
-        }
-
-
-        soglia += 6118750
-        maxLap += 6118750
-        showToast("Maxlap : $maxLap")
-        return maxLap <= soglia
+        return sharpness < 1000
     }
 }
