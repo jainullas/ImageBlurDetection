@@ -9,8 +9,10 @@ Download OpenCV by selecting a stable version of Android pack from [here](https:
 Integrating OpenCV to studio-project is quite a long procedure. Please refer this [awesome](https://medium.com/@sukritipaul005/a-beginners-guide-to-installing-opencv-android-in-android-studio-ea46a7b4f2d3) article.
 
 #### Screenshots
-![Blurred image](Screenshot_blurred_image_ImageBlurDetection.jpg)
-![Not Blurred image](Screenshot_not_blurred_image_ImageBlurDetection.jpg)
+Blurred Image | Not Blurred Image
+------------ | -------------
+<img src="Screenshot_blurred_image_ImageBlurDetection.jpg" width="250"> | <img src="Screenshot_not_blurred_image_ImageBlurDetection.jpg" width="250">
+
 
 
 #### APK Size
