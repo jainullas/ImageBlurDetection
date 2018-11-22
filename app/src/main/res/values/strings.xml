@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImageBlur</string>
+    <string name="app_name">ImageBlurDetection</string>
     <string name="gallery_pick_image">Gallery image</string>
     <string name="cpu_architecture">Phone CPU Architecture is :  %s</string>
     <string name="select_image_from_gallery">Select Image</string>
