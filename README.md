@@ -1,12 +1,15 @@
 # ImageBlur Detection
 
-To check whether an image is blurred or not in Android, selecting image from Gallery.
+To check whether an image is blurred or not in Android. Image should be selected from Gallery.
 
-
-OpenCV library is used for Blur detection.
+**OpenCV library is used for Blur detection.**
 
 Download OpenCV by selecting a stable version of Android pack from [here](https://opencv.org/releases.html).
 Integrating OpenCV to studio-project is quite a long procedure. Please refer this [awesome](https://medium.com/@sukritipaul005/a-beginners-guide-to-installing-opencv-android-in-android-studio-ea46a7b4f2d3) article.
+
+#### Threshold value
+If the sharpness of image is lesser than this value, then that image is marked as blurred.
+
 
 #### Screenshots
 Blurred Image | Not Blurred Image
@@ -26,7 +29,6 @@ APK size is the main concern when we want to integrate with OpenCV.
 
 
 #### Workaround to minimise apk size
-[Credits](https://stackoverflow.com/a/45074929/5785930)
 * Splitting apks by including only those architectures that we need to support. Also include universal apk.
 ```groovy
  splits {
@@ -54,30 +56,24 @@ APK size is the main concern when we want to integrate with OpenCV.
  }
  ```
 
- *Problem* with this approach is we have to upload all the apks separately for google play console, including univeral apk.
+**Problem** with this approach is we have to upload all the apks separately for google play console, including univeral apk. [Credits](https://stackoverflow.com/a/45074929/5785930)
 
-#### Threshold value
-If the sharpness of image is lesser than this value, then that image is marked as blurred.
-
-#### Factors which decides the quality of the Image
-*  **MegaPixels of Camera** - Doesn’t necessarily impact image quality, more MP!=more quality.
+#### Factors which decides the quality of an Image
+*  **Mega Pixels of Camera** - Doesn’t necessarily impact image quality, more MP!=more quality.
 *  **Camera Sensor quality** - Hardware component which decides image quality. Better sensor will result in better picture quality.
-*  **Pixel Size of Camera** - more pixel size will give more picture quality. 16MP Samsung S5 and S6 has 1.12µm but 12MP Samsung S7 has 1.4µm.
-*  **Aperture** - Hole/Opening through which light travels. Larger apertures are better, To control the amount of light reaching the image sensor. 
-*  **ShutterSpeed** - Length of time with which sensor is exposed to light. More shutter speed is, the more light is available to focus. Ex : For moving objects, slower SP results in blurred images
-*  **ImageSize** - Doesn’t necessarily impact image quality, more image size!=more quality.
+*  **Pixel Size** - more pixel size will give more picture quality. 16MP Samsung S5 and S6 has 1.12µm but 12MP Samsung S7 has 1.4µm.
+*  **Aperture** - Hole/Opening in the Camera through which light travels. Larger apertures are better, To control the amount of light reaching the image sensor. 
+*  **Shutter Speed** - Length of time with which sensor is exposed to light. More shutter speed is, the more light is available to focus. Ex : For moving objects, slower SP results in blurred images
+*  **Image Size** - Doesn’t necessarily impact image quality, more image size!=more quality.
 
 #### How to decide threshold value? 
 Threshold is a critical parameter to verify the blurriness of image.
 * Too small of a value, and you’ll accidentally mark images as blurry when they are not.
 * With too large of a threshold, you’ll mark images as non-blurry when in fact they are.
-It all depends on the dataset of images.
 [Credits](https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/)
 
 #### So finally, What value to use for threshold?
-* 150 - For the images from Back Camera.
-* 200 - For the images from Front Camera.
-* 200 - For the images selected from Gallery.
+It all depends on the dataset of images. Currently we are keeping it as **500**.
 
 #### Useful info
 According to [stats](https://stackoverflow.com/a/33230181/5785930), armv7 is the most commonly used android architectures.
