@@ -61,7 +61,7 @@ APK size is the main concern when we want to integrate with OpenCV.
 #### Factors which decides the quality of an Image
 *  **Mega Pixels of Camera** - Doesn’t necessarily impact image quality, more MP!=more quality.
 *  **Camera Sensor quality** - Hardware component which decides image quality. Better sensor will result in better picture quality.
-*  **Pixel Size** - more pixel size will give more picture quality. 16MP Samsung S5 and S6 has 1.12µm but 12MP Samsung S7 has 1.4µm.
+*  **Pixel Size** - more pixel size will give more picture quality. 16MP Samsung S5 and S6 has 1.12µm pixel size but 12MP Samsung S7 has 1.4µm pixel size.
 *  **Aperture** - Hole/Opening in the Camera through which light travels. Larger apertures are better, To control the amount of light reaching the image sensor. 
 *  **Shutter Speed** - Length of time with which sensor is exposed to light. More shutter speed is, the more light is available to focus. Ex : For moving objects, slower SP results in blurred images
 *  **Image Size** - Doesn’t necessarily impact image quality, more image size!=more quality.

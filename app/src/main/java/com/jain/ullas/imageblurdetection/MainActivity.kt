@@ -3,16 +3,9 @@ package com.jain.ullas.imageblurdetection
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.StyleSpan
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -28,14 +21,19 @@ import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfDouble
 import org.opencv.imgproc.Imgproc
+import rx.Observable
+import rx.Subscriber
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 import java.text.DecimalFormat
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), MainActivityView {
 
     companion object {
         private const val PICK_IMAGE_REQUEST_CODE = 1001
-        private const val BLUR_THRESHOLD = 500
+        const val BLUR_THRESHOLD = 500
         private const val BLURRED_IMAGE = "BLURRED IMAGE"
         private const val NOT_BLURRED_IMAGE = "NOT BLURRED IMAGE"
     }
@@ -48,9 +46,6 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         setContentView(R.layout.activity_main)
         presenter = MainPresenter(this)
         textCpuArchitecture.text = getString(R.string.cpu_architecture, System.getProperty("os.arch"))
-        selectImageFromGallery.setOnClickListener {
-            launchGalleryToPickPhoto()
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -72,23 +67,69 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             PICK_IMAGE_REQUEST_CODE -> if (resultCode == Activity.RESULT_OK && null != data) {
-                extractImageBitmapFromIntentData(data)
+                Observable.just(true)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.computation())
+                        .subscribe(object : Subscriber<Boolean>(){
+                            override fun onNext(t: Boolean?) {
+                                val bitmapImages = extractImageBitmapFromIntentData(data)
+                                (0 until bitmapImages.size).forEach {
+                                    presenter.getDataFromImageBitmap(bitmapImages[it])
+                                }
+                            }
+
+                            override fun onCompleted() {
+
+                            }
+
+                            override fun onError(e: Throwable?) {
+
+                            }
+
+                        })
             }
         }
     }
 
-    private fun extractImageBitmapFromIntentData(galleryIntentData: Intent) {
+
+    private fun extractImageBitmapFromIntentData(galleryIntentData: Intent): ArrayList<Bitmap> {
         showLoading()
-        try {
+        val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
+        val images = ArrayList<Bitmap>()
+        if (galleryIntentData.data != null) {
             val imageUri = galleryIntentData.data
-            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-            scannedImage.setImageBitmap(bitmap)
-            scannedImage.visibility = VISIBLE
-            presenter.getDataFromImageBitmap(bitmap)
-        } catch (e: Exception) {
-            hideLoading()
-            Log.e(MainActivity::class.java.name, "Error", e)
+            images.add(MediaStore.Images.Media.getBitmap(contentResolver, imageUri))
+//            val cursor = contentResolver.query(imageUri, filePathColumn, null, null, null)
+//            cursor.moveToFirst()
+//            val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+//            images.add(cursor.getString(columnIndex))
+//            cursor.close()
+        } else {
+            if (galleryIntentData.clipData != null) {
+                val clipData = galleryIntentData.clipData
+                (0 until clipData.itemCount).forEach {
+                    val clipDataItem = clipData.getItemAt(it)
+                    images.add(MediaStore.Images.Media.getBitmap(contentResolver, clipDataItem.uri))
+
+//                    val cursor = contentResolver.query(clipDataItem.uri, filePathColumn, null, null, null)
+//                    cursor.moveToFirst()
+//                    val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+//                    imagesEncodedList.add(cursor.getString(columnIndex))
+//                    cursor.close()
+                }
+            }
         }
+//        try {
+//            val imageUri = galleryIntentData.data
+//            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+//            scannedImage.setImageBitmap(bitmap)
+//            scannedImage.visibility = VISIBLE
+//            presenter.getDataFromImageBitmap(bitmap)
+//        } catch (e: Exception) {
+//            hideLoading()
+//            Log.e(MainActivity::class.java.name, "Error", e)
+//        }
+        return images
     }
 
     override fun onSuccessfulScan(bitmap: Bitmap?) {
@@ -101,19 +142,6 @@ class MainActivity : AppCompatActivity(), MainActivityView {
             Log.e(MainActivity::class.java.name, "Error", e)
         }
 
-    }
-
-    private fun updateStatus(imageSharpness: Double) {
-        when (imageSharpness < BLUR_THRESHOLD) {
-            true -> {
-                status.text = "Threshold : " + BLUR_THRESHOLD + " " + ", Current :  $imageSharpness".plus("\n").plus(BLURRED_IMAGE)
-                status.setTextColor(Color.parseColor("#F70913"))
-            }
-            false -> {
-                status.text = "Threshold : " + BLUR_THRESHOLD + " " + ", Current :  $imageSharpness".plus("\n").plus(NOT_BLURRED_IMAGE)
-                status.setTextColor(Color.parseColor("#34F709"))
-            }
-        }
     }
 
 
@@ -137,11 +165,8 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         val intent = Intent()
         intent.type = "image/*"
         intent.action = Intent.ACTION_GET_CONTENT
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(Intent.createChooser(intent, getString(R.string.gallery_pick_image)), PICK_IMAGE_REQUEST_CODE)
-    }
-
-    private fun clearExistingResult() {
-        status.text = ""
     }
 
     private val mLoaderCallback = object : BaseLoaderCallback(this) {
