@@ -16,14 +16,6 @@ android {
         ndk {
             abiFilters "armeabi-v7a"
         }
-//        splits {
-//            abi {
-//                enable true
-//                reset()
-//                include "armeabi-v7a","x86"
-//                universalApk true
-//            }
-//        }
     }
     buildTypes {
         release {
@@ -32,7 +24,7 @@ android {
         }
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -41,18 +33,6 @@ android {
     }
 }
 
-//ext.versionCodes = ['armeabi-v7a': 4, 'x86': 5]
-//import com.android.build.OutputFile
-//android.applicationVariants.all { variant ->
-//    variant.outputs.each { output ->
-//        def abiFilter = output.getFilter(OutputFile.ABI)
-//        def abiMultiplier = 0
-//        if (abiFilter != null) {
-//            abiMultiplier = project.ext.versionCodes.get(abiFilter)
-//        }
-//        output.versionCodeOverride = abiMultiplier * 1000 + android.defaultConfig.versionCode
-//    }
-//}
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

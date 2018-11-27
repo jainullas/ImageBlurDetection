@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:layout_margin="10dp"
-            android:layout_toLeftOf="@+id/status"
+            android:layout_toStartOf="@+id/status"
             android:scaleType="fitCenter" />
 
         <TextView

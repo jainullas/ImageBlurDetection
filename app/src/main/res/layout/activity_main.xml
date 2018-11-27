@@ -18,11 +18,22 @@
         tools:text="CPU Architecture" />
 
     <TextView
-        android:id="@+id/average"
+        android:id="@+id/threshold"
         android:layout_below="@+id/textCpuArchitecture"
         android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="24sp"
+        tools:text="Threshold : 500"/>
+
+    <TextView
+        android:id="@+id/average"
+        android:layout_below="@+id/threshold"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#1B1A18"
+        android:textSize="24sp"
         tools:text="Average : 200"/>
 
 
@@ -39,7 +50,7 @@
         android:layout_below="@+id/average"
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager"
         tools:listitem="@layout/item_row" />
 
