@@ -17,12 +17,12 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
-import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfDouble
 import org.opencv.imgproc.Imgproc
+import relinker.ReLinker
 import java.text.DecimalFormat
 
 
@@ -158,11 +158,25 @@ class MainActivity : AppCompatActivity(), MainActivityView {
 
     public override fun onResume() {
         super.onResume()
-        if (!OpenCVLoader.initDebug()) {
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback)
-        } else {
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
-        }
+//        if (!OpenCVLoader.initDebug()) {
+//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback)
+//        } else {
+//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
+//        }
+//        try {
+//
+//            val path = filesDir.absolutePath + "/libopencv_java3.so"
+//            System.load(path)
+//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
+//        }catch (e : Exception){
+//            Log.e("Ullas", "Error" ,e)
+//        }
+        loadOpenCV()
+    }
+
+    private fun loadOpenCV() {
+        val path =  "/opencv_java3"
+        ReLinker.loadLibrary(this, path)
     }
 
     override fun onDestroy() {
