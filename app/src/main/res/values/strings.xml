@@ -3,4 +3,5 @@
     <string name="gallery_pick_image">Gallery image</string>
     <string name="cpu_architecture">Phone CPU Architecture is :  %s</string>
     <string name="select_image_from_gallery">Select Image</string>
+    <string name="result">Threshold value is %1s \n current score is %2s \n %3s</string>
 </resources>

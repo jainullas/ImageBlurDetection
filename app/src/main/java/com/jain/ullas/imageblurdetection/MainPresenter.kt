@@ -1,5 +1,7 @@
 package com.jain.ullas.imageblurdetection
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
@@ -13,22 +15,19 @@ class MainPresenter(val view: MainActivityView) {
 
     fun getDataFromImageBitmap(galleryImageBitmap: Bitmap) {
         val subscription =
-                Observable.fromCallable { resizeBitmap(galleryImageBitmap, 500, 500) }
+                Observable.just(galleryImageBitmap)
+                        .map { resizeBitmap(it, 500, 500) }
+                        .map { view.getSharpnessScore(it)  }
                         .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                         .subscribe(
-                                { bitmap ->
+                                { score ->
                                     view.hideLoading()
-                                    when {
-                                        bitmap != null -> {
-                                            view.onSuccessfulScan(bitmap)
-                                        }
-                                        else -> view.onScanFailureFromGallery()
-                                    }
+                                    view.showScore(score)
                                 },
                                 {
                                     run {
                                         view.hideLoading()
-                                        view.onScanFailureFromGallery()
+                                        view.onError()
                                     }
                                 })
         compositeSubscription.add(subscription)
@@ -59,6 +58,17 @@ class MainPresenter(val view: MainActivityView) {
 
     fun onDestroy() {
         compositeSubscription.clear()
+    }
+
+    fun onClickSelectImage() {
+        view.onClickSelectImage()
+    }
+
+    fun onActivityResultForPickImageRequest(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == MainActivity.PICK_IMAGE_REQUEST_CODE
+                && resultCode == Activity.RESULT_OK && null != data){
+            view.onActivityResultForPickImageRequest(data)
+        }
     }
 
 }
