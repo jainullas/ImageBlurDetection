@@ -17,13 +17,16 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
+import org.opencv.core.Mat
+import java.text.DecimalFormat
+import android.app.ProgressDialog
 import org.opencv.android.Utils
 import org.opencv.core.Core
-import org.opencv.core.Mat
 import org.opencv.core.MatOfDouble
 import org.opencv.imgproc.Imgproc
 import relinker.ReLinker
-import java.text.DecimalFormat
+import java.io.*
+import java.nio.channels.FileChannel
 
 
 class MainActivity : AppCompatActivity(), MainActivityView {
@@ -31,29 +34,36 @@ class MainActivity : AppCompatActivity(), MainActivityView {
     companion object {
         private const val PICK_IMAGE_REQUEST_CODE = 1001
         const val BLUR_THRESHOLD = 500
+
     }
 
-    private lateinit var sourceMatImage: Mat
+    private var sourceMatImage: Mat? = null
     private lateinit var presenter: MainPresenter
+    private val logcatLogger = ReLinker.Logger { message -> Log.d("ReLinker", message) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        loadLibrary()
         presenter = MainPresenter(this)
         textCpuArchitecture.text = getString(R.string.cpu_architecture, System.getProperty("os.arch"))
         threshold.text = BLUR_THRESHOLD.toString()
     }
 
     override fun checkForImageSharpnessFromOpenCV(image: Bitmap): Double {
-        val destination = Mat()
-        val matGray = Mat()
-        Utils.bitmapToMat(image, sourceMatImage)
-        Imgproc.cvtColor(sourceMatImage, matGray, Imgproc.COLOR_BGR2GRAY)
-        Imgproc.Laplacian(matGray, destination, 3)
-        val median = MatOfDouble()
-        val std = MatOfDouble()
-        Core.meanStdDev(destination, median, std)
-        return DecimalFormat("0.00").format(Math.pow(std.get(0, 0)[0], 2.0)).toDouble()
+        sourceMatImage?.let {
+            val destination = Mat()
+            val matGray = Mat()
+            Utils.bitmapToMat(image, it)
+            Imgproc.cvtColor(it, matGray, Imgproc.COLOR_BGR2GRAY)
+            Imgproc.Laplacian(matGray, destination, 3)
+            val median = MatOfDouble()
+            val std = MatOfDouble()
+            Core.meanStdDev(destination, median, std)
+            return DecimalFormat("0.00").format(Math.pow(std.get(0, 0)[0], 2.0)).toDouble()
+        } ?: run {
+            return 0.0
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intentData: Intent?) {
@@ -145,7 +155,7 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         override fun onManagerConnected(status: Int) {
             when (status) {
                 LoaderCallbackInterface.SUCCESS -> {
-                    if (!::sourceMatImage.isInitialized) {
+                    if (sourceMatImage == null) {
                         sourceMatImage = Mat()
                     }
                 }
@@ -156,32 +166,62 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-//        if (!OpenCVLoader.initDebug()) {
-//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback)
-//        } else {
-//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
-//        }
-//        try {
-//
-//            val path = filesDir.absolutePath + "/libopencv_java3.so"
-//            System.load(path)
-//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
-//        }catch (e : Exception){
-//            Log.e("Ullas", "Error" ,e)
-//        }
-        loadOpenCV()
-    }
-
-    private fun loadOpenCV() {
-        val path =  "/opencv_java3"
-        ReLinker.loadLibrary(this, path)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         presenter.onDestroy()
+    }
+
+    private fun loadLibrary() {
+        val soFilePath = "/sdcard/data/user/0/jnilibs/arm64-v8a/"
+        val sourceSoFile = File(soFilePath, "libopencv_java3.so")
+        val libFolderPath = getDir("lib", 0)
+        val destinationFile = File(libFolderPath, "libopencv_java3.so")
+        if (!destinationFile.exists()) {
+            Log.d("Ullas", "Not exists")
+            destinationFile.createNewFile()
+        } else {
+            destinationFile.delete()
+            destinationFile.createNewFile()
+        }
+        try {
+            copyFile(sourceSoFile, destinationFile)
+            val file = File(destinationFile.absolutePath)
+            Toast.makeText(this, file.exists().toString(), Toast.LENGTH_LONG).show()
+            ReLinker.log(logcatLogger)
+                    .loadLibrary(this, "opencv_java3", object : ReLinker.LoadListener {
+                override fun success() {
+                    mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
+                }
+
+                override fun failure(t: Throwable?) {
+                }
+            })
+
+        } catch (e: Exception) {
+            Log.d("Ullas", "", e)
+        }
+    }
+
+    @Throws(IOException::class)
+    fun copyFile(sourceFile: File, destFile: File) {
+        if (!destFile.parentFile.exists())
+            destFile.parentFile.mkdirs()
+
+        if (!destFile.exists()) {
+            destFile.createNewFile()
+        }
+
+        var source: FileChannel? = null
+        var destination: FileChannel? = null
+
+        try {
+            source = FileInputStream(sourceFile).channel
+            destination = FileOutputStream(destFile).channel
+            destination!!.transferFrom(source, 0, source!!.size())
+        } finally {
+            source?.close()
+            destination?.close()
+        }
     }
 
 }

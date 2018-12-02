@@ -30,7 +30,7 @@ import java.util.Set;
 import relinker.elf.ElfParser;
 
 public class ReLinkerInstance {
-    private static final String LIB_DIR = "/sdcard/Download/jnilibs/armeabi-v7a/";
+    private static final String LIB_DIR = "lib";
 
     protected final Set<String> loadedLibraries = new HashSet<String>();
     protected final ReLinker.LibraryLoader libraryLoader;
