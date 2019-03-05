@@ -17,12 +17,12 @@ class MainPresenter(val view: MainActivityView) {
         val subscription =
                 Observable.just(galleryImageBitmap)
                         .map { resizeBitmap(it, 500, 500) }
-                        .map { view.getSharpnessScore(it)  }
+                        .map { view.getSharpnessScoreFromOpenCV(it)  }
                         .observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io())
                         .subscribe(
                                 { score ->
                                     view.hideLoading()
-                                    view.showScore(score)
+                                    view.showScoreFromOpenCV(score)
                                 },
                                 {
                                     run {

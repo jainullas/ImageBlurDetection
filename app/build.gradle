@@ -13,17 +13,6 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
-        }
-//        splits {
-//            abi {
-//                enable true
-//                reset()
-//                include "armeabi-v7a","x86"
-//                universalApk true
-//            }
-//        }
     }
     buildTypes {
         release {
@@ -38,21 +27,10 @@ android {
     }
     packagingOptions{
         exclude 'META-INF/rxjava.properties'
+        exclude 'META-INF/proguard/androidx-annotations.pro'
     }
-}
 
-//ext.versionCodes = ['armeabi-v7a': 4, 'x86': 5]
-//import com.android.build.OutputFile
-//android.applicationVariants.all { variant ->
-//    variant.outputs.each { output ->
-//        def abiFilter = output.getFilter(OutputFile.ABI)
-//        def abiMultiplier = 0
-//        if (abiFilter != null) {
-//            abiMultiplier = project.ext.versionCodes.get(abiFilter)
-//        }
-//        output.versionCodeOverride = abiMultiplier * 1000 + android.defaultConfig.versionCode
-//    }
-//}
+}
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -65,4 +43,8 @@ dependencies {
     implementation project(':openCVLibrary343')
     implementation 'io.reactivex.rxjava2:rxjava:2.0.5'
     implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'androidx.annotation:annotation:1.0.1'
+    androidTestImplementation('org.powermock:powermock-module-junit4:1.5'){
+        exclude group: 'org.hamcrest'
+    }
 }

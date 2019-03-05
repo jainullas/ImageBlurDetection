@@ -2,7 +2,7 @@ package com.jain.ullas.imageblurdetection
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.content.ContextCompat
@@ -10,9 +10,9 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
@@ -31,21 +31,32 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         private const val TAG = "MainActivity"
         const val PICK_IMAGE_REQUEST_CODE = 1001
         private const val BLUR_THRESHOLD = 200
-        private const val BLURRED_IMAGE = "BLURRED IMAGE"
-        private const val NOT_BLURRED_IMAGE = "NOT BLURRED IMAGE"
+        const val BLURRED_IMAGE = "BLURRED IMAGE"
+        const val NOT_BLURRED_IMAGE = "NOT BLURRED IMAGE"
     }
 
     private lateinit var sourceMatImage: Mat
-    private lateinit var presenter: MainPresenter
+    private val presenter: MainPresenter by lazy {
+        MainPresenter(this)
+    }
+    private val mLoaderCallback = object : BaseLoaderCallback(this) {
+        override fun onManagerConnected(status: Int) {
+            when (status) {
+                LoaderCallbackInterface.SUCCESS -> {
+                    sourceMatImage = Mat()
+                }
+                else -> {
+                    super.onManagerConnected(status)
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        presenter = MainPresenter(this)
         textCpuArchitecture.text = getString(R.string.cpu_architecture, System.getProperty("os.arch"))
-        selectImageFromGallery.setOnClickListener {
-            presenter.onClickSelectImage()
-        }
+        statusFromRenderScript.visibility = View.VISIBLE
     }
 
     override fun onClickSelectImage() {
@@ -92,6 +103,9 @@ class MainActivity : AppCompatActivity(), MainActivityView {
             val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
             scannedImage.setImageBitmap(bitmap)
             scannedImage.visibility = VISIBLE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                showScoreFromRenderScript(BlurrinessDetectionRenderScript.runDetection(this, bitmap))
+            }
             presenter.getDataFromImageBitmap(bitmap)
         } catch (e: Exception) {
             hideLoading()
@@ -99,7 +113,7 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         }
     }
 
-    override fun getSharpnessScore(bitmap: Bitmap): Double {
+    override fun getSharpnessScoreFromOpenCV(bitmap: Bitmap): Double {
         val destination = Mat()
         val matGray = Mat()
         Utils.bitmapToMat(bitmap, sourceMatImage)
@@ -111,19 +125,36 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         return DecimalFormat("0.00").format(Math.pow(std.get(0, 0)[0], 2.0)).toDouble()
     }
 
-    override fun showScore(score: Double) {
-        when (score < BLUR_THRESHOLD) {
-            true -> {
-                status.text = getString(R.string.result, BLUR_THRESHOLD.toString(), score.toString(), BLURRED_IMAGE)
-                status.setTextColor(ContextCompat.getColor(this, R.color.blurred_image))
-            }
-            false -> {
-                status.text = getString(R.string.result, BLUR_THRESHOLD.toString(), score.toString(), NOT_BLURRED_IMAGE)
-                status.setTextColor(ContextCompat.getColor(this, R.color.not_blurred_image))
+    override fun showScoreFromOpenCV(score: Double) {
+        with(statusFromOpenCV) {
+            visibility = View.VISIBLE
+            when (score < BLUR_THRESHOLD) {
+                true -> {
+                    text = getString(R.string.result_from_opencv, BLURRED_IMAGE, BLUR_THRESHOLD.toString(), score.toString())
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.blurred_image))
+                }
+                false -> {
+                    text = getString(R.string.result_from_opencv, NOT_BLURRED_IMAGE, BLUR_THRESHOLD.toString(), score.toString())
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.not_blurred_image))
+                }
             }
         }
     }
 
+    override fun showScoreFromRenderScript(status: Pair<Boolean, String>) {
+        with(statusFromRenderScript) {
+            visibility = View.VISIBLE
+            text = status.second
+            when (status.first) {
+                true -> {
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.blurred_image))
+                }
+                false -> {
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.not_blurred_image))
+                }
+            }
+        }
+    }
 
     override fun hideLoading() {
         progressBar.visibility = GONE
@@ -131,19 +162,6 @@ class MainActivity : AppCompatActivity(), MainActivityView {
 
     override fun showLoading() {
         progressBar.visibility = VISIBLE
-    }
-
-    private val mLoaderCallback = object : BaseLoaderCallback(this) {
-        override fun onManagerConnected(status: Int) {
-            when (status) {
-                LoaderCallbackInterface.SUCCESS -> {
-                    sourceMatImage = Mat()
-                }
-                else -> {
-                    super.onManagerConnected(status)
-                }
-            }
-        }
     }
 
     public override fun onResume() {

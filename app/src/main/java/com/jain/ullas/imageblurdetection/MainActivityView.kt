@@ -8,8 +8,9 @@ interface MainActivityView {
     fun hideLoading()
     fun onClickSelectImage()
     fun onActivityResultForPickImageRequest(data: Intent)
-    fun getSharpnessScore(bitmap: Bitmap): Double
-    fun showScore(score: Double)
+    fun getSharpnessScoreFromOpenCV(bitmap: Bitmap): Double
     fun onError()
+    fun showScoreFromOpenCV(score: Double)
+    fun showScoreFromRenderScript(status : Pair<Boolean, String>)
 
 }

@@ -16,34 +16,37 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <Button
-        android:id="@+id/selectImageFromGallery"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/textCpuArchitecture"
-        android:text="@string/select_image_from_gallery"
-        android:textSize="18sp"
-        android:padding="20dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
     <ImageView
         android:id="@+id/scannedImage"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/selectImageFromGallery"
+        android:layout_below="@+id/textCpuArchitecture"
         android:scaleType="fitCenter"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
 
     <TextView
-        android:id="@+id/status"
+        android:id="@+id/statusFromOpenCV"
         android:textSize="20sp"
-        android:layout_margin="10dp"
+        android:layout_margin="8dp"
         android:gravity="center"
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/scannedImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#1B1A18"
+        tools:text="Sharpness : 500, Blurred Image"/>
+
+
+    <TextView
+        android:id="@+id/statusFromRenderScript"
+        android:textSize="20sp"
+        android:layout_margin="5dp"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_below="@+id/statusFromOpenCV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#1B4A18"
         tools:text="Sharpness : 500, Blurred Image"/>
 
     <ProgressBar
