@@ -77,3 +77,6 @@ It all depends on the dataset of images. Currently we are keeping it as **500**.
 
 #### Useful info
 According to [stats](https://stackoverflow.com/a/33230181/5785930), armv7 is the most commonly used android architectures.
+
+
+APK size can be reduced by writing the code for blur detection to under 10 MB. It's a very simple code to implement.
