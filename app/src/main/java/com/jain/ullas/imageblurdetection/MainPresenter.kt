@@ -13,6 +13,11 @@ class MainPresenter(val view: MainActivityView) {
     private val compositeSubscription = CompositeSubscription()
 
 
+    companion object {
+        init {
+            System.loadLibrary("opencv_java3")
+        }
+    }
     fun getDataFromImageBitmap(galleryImageBitmap: Bitmap) {
         val subscription =
                 Observable.just(galleryImageBitmap)
